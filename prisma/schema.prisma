@@ -1,0 +1,88 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Product {
+  id          Int          @id @default(autoincrement())
+  name        String
+  description String?
+  sizes       Size[]
+  colors      Color[]
+  categoryId  Int
+  subCategoryId Int
+  category    Category    @relation(fields: [categoryId], references: [id])
+  subCategory SubCategory @relation(fields: [subCategoryId], references: [id])
+  orders      OrderItem[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model Size {
+  id        Int      @id @default(autoincrement())
+  name      String
+  quantity  Int
+  productId Int?
+  product   Product?  @relation(fields: [productId], references: [id])
+}
+
+model Color {
+  id        Int      @id @default(autoincrement())
+  name      String
+  value     String
+  productId Int?
+  product   Product?  @relation(fields: [productId], references: [id])
+}
+
+model Category {
+  id          Int          @id @default(autoincrement())
+  name        String
+  subCategories SubCategory[]
+  products    Product[]
+}
+
+model SubCategory {
+  id          Int          @id @default(autoincrement())
+  name        String
+  categoryId  Int
+  category    Category    @relation(fields: [categoryId], references: [id])
+  products    Product[]
+}
+
+model Order {
+  id          Int          @id @default(autoincrement())
+  userId      Int
+  user        User         @relation(fields: [userId], references: [id])
+  orderItems  OrderItem[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model OrderItem {
+  id        Int      @id @default(autoincrement())
+  quantity  Int
+  productId Int
+  orderId   Int
+  product   Product  @relation(fields: [productId], references: [id])
+  order     Order    @relation(fields: [orderId], references: [id])
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  name      String?
+  phone     String
+  orders    Order[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
