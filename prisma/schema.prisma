@@ -14,18 +14,18 @@ datasource db {
 }
 
 model Product {
-  id          Int          @id @default(autoincrement())
-  name        String
-  description String?
-  sizes       Size[]
-  colors      Color[]
-  categoryId  Int
+  id           Int          @id @default(autoincrement())
+  name         String
+  description  String?
+  sizes        Size[]
+  colors       Color[]
+  categoryId   Int
   subCategoryId Int
-  category    Category    @relation(fields: [categoryId], references: [id])
-  subCategory SubCategory @relation(fields: [subCategoryId], references: [id])
-  orders      OrderItem[]
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  category     Category     @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  subCategory  SubCategory  @relation(fields: [subCategoryId], references: [id], onDelete: Restrict)
+  orders       OrderItem[]
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
 }
 
 model Size {
@@ -33,7 +33,7 @@ model Size {
   name      String
   quantity  Int
   productId Int?
-  product   Product?  @relation(fields: [productId], references: [id])
+  product   Product?  @relation(fields: [productId], references: [id], onDelete: SetNull)
 }
 
 model Color {
@@ -41,28 +41,28 @@ model Color {
   name      String
   value     String
   productId Int?
-  product   Product?  @relation(fields: [productId], references: [id])
+  product   Product?  @relation(fields: [productId], references: [id], onDelete: SetNull)
 }
 
 model Category {
-  id          Int          @id @default(autoincrement())
-  name        String
+  id            Int           @id @default(autoincrement())
+  name          String
   subCategories SubCategory[]
-  products    Product[]
+  products      Product[]
 }
 
 model SubCategory {
-  id          Int          @id @default(autoincrement())
+  id          Int        @id @default(autoincrement())
   name        String
   categoryId  Int
-  category    Category    @relation(fields: [categoryId], references: [id])
+  category    Category   @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   products    Product[]
 }
 
 model Order {
   id          Int          @id @default(autoincrement())
   userId      Int
-  user        User         @relation(fields: [userId], references: [id])
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   orderItems  OrderItem[]
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
@@ -73,8 +73,8 @@ model OrderItem {
   quantity  Int
   productId Int
   orderId   Int
-  product   Product  @relation(fields: [productId], references: [id])
-  order     Order    @relation(fields: [orderId], references: [id])
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Restrict)
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
 }
 
 model User {

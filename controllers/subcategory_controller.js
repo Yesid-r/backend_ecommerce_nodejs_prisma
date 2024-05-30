@@ -25,4 +25,23 @@ export const create = async(req, res ) => {
         return res.status(500).json({success: false, message:error.message})
     }
 }
+export const update = async (req, res) => {
+    try {
+        const { name } = req.body
+        const {subCategoryId} = req.params
+        const id = parseInt(subCategoryId, 10)
+        const sub_category = await prisma.subCategory.update({
+            where:{
+                id:id
+            },
+            data:{
+                name
+            }
+        })
+
+        return res.status(200).json({success: true, message:"Subcategory update", data: sub_category})
+    } catch (error) {
+        return res.status(500).json({success: false, message: error.message})
+    }
+}
 

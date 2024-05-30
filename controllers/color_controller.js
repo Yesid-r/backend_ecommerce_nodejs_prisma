@@ -25,4 +25,25 @@ export const create = async(req, res ) => {
         return res.status(500).json({success: false, message:error.message})
     }
 }
+export const update = async (req, res) => {
+    try {
+        const { name, value } = req.body
+        const {colorId} = req.params
+        const id = parseInt(colorId, 10)
+        const color = await prisma.color.update({
+            where:{
+                id:id
+            },
+            data:{
+                name,
+                value
+            }
+
+        })
+
+        return res.status(200).json({success: true, message:"color update", data: color})
+    } catch (error) {
+        return res.status(500).json({success: false, message: error.message})
+    }
+}
 
