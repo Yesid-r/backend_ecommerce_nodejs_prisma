@@ -13,11 +13,11 @@ export const findAll = async (req, res  ) => {
 export const create = async(req, res ) => {
     try {
         const {name, categoryId} = req.body
-        
+        const categoryIdInt = parseInt(categoryId, 10)
         const sub_category  = await prisma.subCategory.create({
             data: {
                 name,
-                categoryId
+                categoryId: categoryIdInt
             }
         })
         return res.status(200).json({success: true, message: "sub category created correct", data: sub_category})

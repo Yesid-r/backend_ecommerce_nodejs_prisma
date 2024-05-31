@@ -3,8 +3,30 @@ import prisma from "../utils/prismaClient.js";
 export const findAll = async (req, res  ) => {
 
     try {
-        const categories = await prisma.category.findMany()
+        const categories = await prisma.category.findMany({
+            include: {
+                subCategories:true
+            }
+        })
         return res.status(200).json({success: true, message: "categories", data: categories})
+    } catch (error) {
+        return res.status(500).json({success: false, message: error})
+    }
+}
+
+export const getOne = async (req, res) => {
+    
+    try {
+        const {categoryId} = req.params
+        const category = await prisma.category.findFirst({
+            where: {
+                id: parseInt(categoryId, 10)
+            },
+            include:{
+                subCategories: true
+            }
+        })    
+        return res.status(200).json({success: true, message: "category", data: category})
     } catch (error) {
         return res.status(500).json({success: false, message: error})
     }

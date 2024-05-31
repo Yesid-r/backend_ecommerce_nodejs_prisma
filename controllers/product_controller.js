@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client"
 import prisma from "../utils/prismaClient.js"
 
 export const findAll = async (req, res) => {
@@ -18,18 +19,20 @@ export const findAll = async (req, res) => {
 
 export const create = async (req, res) => {
     try {
-        const { name, description, sizes, colors, categoryId, subCategoryId } = req.body
+        const { name, description, sizes, colors, categoryId, subCategoryId, price, images } = req.body
+        const categoryIdInt = parseInt(categoryId, 10)
+        const subCategoryIdInt = parseInt(subCategoryId, 10)
 
         const product = await prisma.product.create({
             data: {
                 name,
                 description,
-                categoryId,
-                subCategoryId,
+                categoryId: categoryIdInt,
+                subCategoryId: subCategoryIdInt,
                 sizes: {
                     create: sizes.map(size => ({
                         name: size.name,
-                        quantity: size.quantity
+                        quantity: parseInt(size.quantity)
                     }))
                 },
                 colors: {
@@ -37,7 +40,11 @@ export const create = async (req, res) => {
                         name: color.name,
                         value: color.value
                     }))
-                }
+                },
+                price,
+                images
+
+
             }
         });
 
@@ -49,23 +56,66 @@ export const create = async (req, res) => {
 
 export const update = async (req, res) => {
     try {
-        const { name, description, categoryId, subCategoryId } = req.body
-        const {productId} = req.params
+        const { name, description, categoryId, subCategoryId, price, images } = req.body
+        const { productId } = req.params
         const id = parseInt(productId, 10)
+        const priceDecimal = new Prisma.Decimal(price)
         const product = await prisma.product.update({
-            where:{
-                id:id
+            where: {
+                id: id
             },
-            data:{
+            data: {
                 name,
                 description,
-                categoryId,
-                subCategoryId,
+                categoryId: parseInt(categoryId,10),
+                subCategoryId: parseInt(subCategoryId, 10),
+                price: priceDecimal,
+                images
             }
         })
 
-        return res.status(200).json({success: true, message:"Product update", data: product})
+        return res.status(200).json({ success: true, message: "Product update", data: product })
     } catch (error) {
-        return res.status(500).json({success: false, message: error.message})
+        return res.status(500).json({ success: false, message: error.message })
+    }
+}
+
+export const delete_product = async (req, res) => {
+    try {
+        const { productId } = req.params;
+        const id = parseInt(productId, 10);
+
+        
+        const product = await prisma.product.delete({
+            where: {
+                id: id
+            }
+        });
+
+        return res.status(200).json({ success: true, message: "Product deleted successfully", data: product });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message });
+    }
+}
+
+export const find_product = async (req, res) => {
+    try {
+        const {productId} = req.params
+        const id = parseInt(productId, 10);
+        const product = await prisma.product.findFirst({
+            where:{
+                id
+            },
+            include:{
+                category:true,
+                subCategory:true
+
+            }
+        })
+
+        return res.status(200).json({success: true, message: 'product find', data: product})
+
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message });
     }
 }
