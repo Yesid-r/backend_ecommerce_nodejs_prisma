@@ -49,6 +49,40 @@ export const findByCategory = async (req, res) => {
     }
 }
 
+export const findBySubCategory = async (req, res) => {
+    try {
+        const {subcategory} = req.params
+        const subCategory = await prisma.subCategory.findFirst({
+            where: {
+                name: {
+                    equals: subcategory.toLowerCase(),
+                    mode: 'insensitive'
+                }
+            }, include:{
+                products:{
+                    include: {
+                        sizes:true,
+                        colors:true,
+                        category:true,
+                        subCategory:true
+
+                    }
+                }
+            }
+        })
+
+        if(!subCategory){
+            return res.status(404).json({success: false, message: "sub category not found"} )
+        }
+        else {
+            return res.status(200).json({success: true, message: "products", data: subCategory.products})
+            
+        }
+    } catch (error) {
+        return res.status(500).json({success: false, message: error})
+    }
+}
+
 export const create = async (req, res) => {
     try {
         const { name, description, sizes, colors, categoryId, subCategoryId, price, images } = req.body
