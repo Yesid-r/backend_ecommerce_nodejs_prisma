@@ -26,6 +26,9 @@ export const create = async(req, res ) => {
                     create: orderItems.map(orderItem =>({
                         quantity: orderItem.quantity,
                         productId: orderItem.productId,
+                        selectedSize: orderItem.selectedSize,
+                        isPaid: false
+
 
                     }))
                 }
