@@ -14,6 +14,26 @@ export const findAll = async (req, res  ) => {
         return res.status(500).json({success: false, message: error})
     }
 }
+export const findByIdUser = async(req, res) => {
+    try {
+        const {userId} = req.params
+        const orders = await prisma.order.findMany({
+            where:{
+                userId: parseInt(userId, 10)
+            },
+            include:{
+                orderItems:{
+                    include: {
+                        product: true
+                    }
+                }
+            }
+        })
+        return res.status(200).json({success:true, message:"Orders by user", data: orders})
+    } catch (error) {
+        return res.status(500).json({success:false, message:error})
+    }
+}
 
 export const create = async(req, res ) => {
     try {
