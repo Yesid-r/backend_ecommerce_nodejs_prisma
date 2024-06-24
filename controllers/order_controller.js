@@ -1,37 +1,37 @@
 import prisma from "../utils/prismaClient.js";
 
-export const findAll = async (req, res  ) => {
+export const findAll = async (req, res) => {
 
     try {
         const orders = await prisma.order.findMany({
-            include:{
+            include: {
                 user: true,
                 orderItems: true
             }
         })
-        return res.status(200).json({success: true, message: "orders", data: orders})
+        return res.status(200).json({ success: true, message: "orders", data: orders })
     } catch (error) {
-        return res.status(500).json({success: false, message: error})
+        return res.status(500).json({ success: false, message: error })
     }
 }
-export const findByIdUser = async(req, res) => {
+export const findByIdUser = async (req, res) => {
     try {
-        const {userId} = req.params
+        const { userId } = req.params
         const orders = await prisma.order.findMany({
-            where:{
+            where: {
                 userId: parseInt(userId, 10)
             },
-            include:{
-                orderItems:{
+            include: {
+                orderItems: {
                     include: {
                         product: true
                     }
                 }
             }
         })
-        return res.status(200).json({success:true, message:"Orders by user", data: orders})
+        return res.status(200).json({ success: true, message: "Orders by user", data: orders })
     } catch (error) {
-        return res.status(500).json({success:false, message:error})
+        return res.status(500).json({ success: false, message: error })
     }
 }
 
@@ -45,17 +45,11 @@ const validateStock = async (item) => {
                 sizes: true
             }
         });
-
-        if (item.selectedSize != 'default') {
-            const size = product.sizes.find(size => size.name === item.selectedSize);
-            if (size && size.quantity >= item.quantity) {
-                return true;
-            } else {
-                return false;
-            }
+        const size = product.sizes.find(size => size.name === item.selectedSize);
+        if (size && size.quantity >= item.quantity) {
+            return true;
         } else {
-            
-            
+            return false;
         }
     } catch (error) {
         return false;
