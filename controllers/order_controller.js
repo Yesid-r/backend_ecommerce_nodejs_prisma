@@ -35,28 +35,63 @@ export const findByIdUser = async(req, res) => {
     }
 }
 
-export const create = async(req, res ) => {
+const validateStock = async (item) => {
     try {
-        const {userId, orderItems} = req.body
-        
-        const order  = await prisma.order.create({
+        const product = await prisma.product.findFirst({
+            where: {
+                id: item.productId
+            },
+            include: {
+                sizes: true
+            }
+        });
+
+        if (item.selectedSize != 'default') {
+            const size = product.sizes.find(size => size.name === item.selectedSize);
+            if (size && size.quantity >= item.quantity) {
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            
+            
+        }
+    } catch (error) {
+        return false;
+    }
+};
+
+export const create = async (req, res) => {
+    try {
+        const { userId, orderItems } = req.body;
+
+
+        for (let orderItem of orderItems) {
+            const isValid = await validateStock(orderItem);
+            if (!isValid) {
+                return res.status(400).json({ success: false, message: `Insufficient stock for product ${orderItem.productId}` });
+            }
+        }
+
+
+        const order = await prisma.order.create({
             data: {
                 userId,
-                orderItems:{
-                    create: orderItems.map(orderItem =>({
+                orderItems: {
+                    create: orderItems.map(orderItem => ({
                         quantity: orderItem.quantity,
                         productId: orderItem.productId,
                         selectedSize: orderItem.selectedSize,
                         isPaid: false
-
-
                     }))
                 }
             }
-        })
-        return res.status(200).json({success: true, message: "order created correct", data: order})
+        });
+
+        return res.status(200).json({ success: true, message: "Order created correctly", data: order });
     } catch (error) {
-        return res.status(500).json({success: false, message:error.message})
+        return res.status(500).json({ success: false, message: error.message });
     }
-}
+};
 

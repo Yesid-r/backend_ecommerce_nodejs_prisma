@@ -122,29 +122,57 @@ export const create = async (req, res) => {
 
 export const update = async (req, res) => {
     try {
-        const { name, description, categoryId, subCategoryId, price, images } = req.body
-        const { productId } = req.params
-        const id = parseInt(productId, 10)
-        const priceDecimal = new Prisma.Decimal(price)
+        const { name, description, categoryId, subCategoryId, price, images, sizes } = req.body;
+        const { productId } = req.params;
+        const id = parseInt(productId, 10);
+        const priceDecimal = new Prisma.Decimal(price);
+
+        
+        const sizesToUpdate = sizes.filter(size => size.id);
+        const sizesToCreate = sizes.filter(size => !size.id);
+
+        
+        const data = {
+            name,
+            description,
+            categoryId: parseInt(categoryId, 10),
+            subCategoryId: parseInt(subCategoryId, 10),
+            price: priceDecimal,
+            images,
+            sizes: {
+                upsert: sizesToUpdate.map(size => ({
+                    where: { id: size.id },
+                    update: {
+                        name: size.name,
+                        quantity: parseInt(size.quantity, 10)
+                    },
+                    create: {
+                        name: size.name,
+                        quantity: parseInt(size.quantity, 10)
+                    }
+                })),
+                create: sizesToCreate.map(size => ({
+                    name: size.name,
+                    quantity: parseInt(size.quantity, 10)
+                }))
+            }
+        };
+
+        
         const product = await prisma.product.update({
             where: {
                 id: id
             },
-            data: {
-                name,
-                description,
-                categoryId: parseInt(categoryId,10),
-                subCategoryId: parseInt(subCategoryId, 10),
-                price: priceDecimal,
-                images
-            }
-        })
+            data: data
+        });
 
-        return res.status(200).json({ success: true, message: "Product update", data: product })
+        return res.status(200).json({ success: true, message: "Product updated", data: product });
     } catch (error) {
-        return res.status(500).json({ success: false, message: error.message })
+        console.log(error.message);
+        return res.status(500).json({ success: false, message: error.message });
     }
-}
+};
+
 
 export const delete_product = async (req, res) => {
     try {

@@ -63,7 +63,7 @@ model SubCategory {
 
 model Order {
   id          Int          @id @default(autoincrement())
-  isPaid      Boolean?
+  isPaid      Boolean      @default(false)
   userId      Int
   user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   orderItems  OrderItem[]
