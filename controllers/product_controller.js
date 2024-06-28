@@ -19,20 +19,20 @@ export const findAll = async (req, res) => {
 
 export const findByCategory = async (req, res) => {
     try {
-        const {category} = req.params
+        const { category } = req.params
         const categoryFound = await prisma.category.findFirst({
-            where:{
+            where: {
                 name: {
                     equals: category.toLowerCase(),
                     mode: 'insensitive'
                 }
-            },include:{
-                products:{
-                    include:{
-                        sizes:true,
-                        colors:true,
-                        category:true,
-                        subCategory:true
+            }, include: {
+                products: {
+                    include: {
+                        sizes: true,
+                        colors: true,
+                        category: true,
+                        subCategory: true
                     }
                 }
             }
@@ -45,41 +45,41 @@ export const findByCategory = async (req, res) => {
         return res.status(200).json({ success: true, message: "products", data: categoryFound.products });
 
     } catch (error) {
-        return res.status(500).json({success: false, message: error})
+        return res.status(500).json({ success: false, message: error })
     }
 }
 
 export const findBySubCategory = async (req, res) => {
     try {
-        const {subcategory} = req.params
+        const { subcategory } = req.params
         const subCategory = await prisma.subCategory.findFirst({
             where: {
                 name: {
                     equals: subcategory.toLowerCase(),
                     mode: 'insensitive'
                 }
-            }, include:{
-                products:{
+            }, include: {
+                products: {
                     include: {
-                        sizes:true,
-                        colors:true,
-                        category:true,
-                        subCategory:true
+                        sizes: true,
+                        colors: true,
+                        category: true,
+                        subCategory: true
 
                     }
                 }
             }
         })
 
-        if(!subCategory){
-            return res.status(404).json({success: false, message: "sub category not found"} )
+        if (!subCategory) {
+            return res.status(404).json({ success: false, message: "sub category not found" })
         }
         else {
-            return res.status(200).json({success: true, message: "products", data: subCategory.products})
-            
+            return res.status(200).json({ success: true, message: "products", data: subCategory.products })
+
         }
     } catch (error) {
-        return res.status(500).json({success: false, message: error})
+        return res.status(500).json({ success: false, message: error })
     }
 }
 
@@ -127,11 +127,11 @@ export const update = async (req, res) => {
         const id = parseInt(productId, 10);
         const priceDecimal = new Prisma.Decimal(price);
 
-        
+
         const sizesToUpdate = sizes.filter(size => size.id);
         const sizesToCreate = sizes.filter(size => !size.id);
 
-        
+
         const data = {
             name,
             description,
@@ -158,7 +158,7 @@ export const update = async (req, res) => {
             }
         };
 
-        
+
         const product = await prisma.product.update({
             where: {
                 id: id
@@ -179,7 +179,7 @@ export const delete_product = async (req, res) => {
         const { productId } = req.params;
         const id = parseInt(productId, 10);
 
-        
+
         const product = await prisma.product.delete({
             where: {
                 id: id
@@ -194,23 +194,72 @@ export const delete_product = async (req, res) => {
 
 export const find_product = async (req, res) => {
     try {
-        const {productId} = req.params
+        const { productId } = req.params
         const id = parseInt(productId, 10);
         const product = await prisma.product.findFirst({
-            where:{
+            where: {
                 id
             },
-            include:{
-                category:true,
-                subCategory:true,
-                sizes:true
+            include: {
+                category: true,
+                subCategory: true,
+                sizes: true
 
 
             }
         })
 
-        return res.status(200).json({success: true, message: 'product find', data: product})
+        return res.status(200).json({ success: true, message: 'product find', data: product })
 
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message });
+    }
+}
+
+export const findByName = async (req, res) => {
+    try {
+        const { name } = req.query;
+        const products = await prisma.product.findMany({
+            where: {
+                name: {
+                    contains: name,
+                    mode: 'insensitive'
+                }
+            },
+            include: {
+                sizes: true,
+                colors: true,
+                category: true,
+                subCategory: true
+            }
+        });
+
+        return res.status(200).json({ success: true, message: "products", data: products });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+export const allFilter = async (req, res) => {
+    try {
+        const { name, category, subcategory } = req.query;
+        console.log(name, category, subcategory)
+        let products = await prisma.product.findMany({
+            where: {
+                AND: [
+                    name ? { name: { contains: name, mode: 'insensitive' } } : {},
+                    category ? { category: { name: { equals: category, mode: 'insensitive' } } } : {},
+                    subcategory ? { subCategory: { name: { equals: subcategory, mode: 'insensitive' } } } : {}
+                ]
+            },
+            include: {
+                sizes: true,
+                colors: true,
+                category: true,
+                subCategory: true
+            }
+        });
+        return res.status(200).json({ success: true, message: "products", data: products });
     } catch (error) {
         return res.status(500).json({ success: false, message: error.message });
     }
