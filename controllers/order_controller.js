@@ -92,9 +92,12 @@ export const create = async (req, res) => {
 export const confirmation = async (req, res) => {
     try {
         console.log(`confirmation `)
+        console.info(req.body)
+        console.info(req.query)
+        
         const pkey = "f31030c05f8ab5630ef73a276eaf107129ad7f39"
         const str = `${req.query['x_cust_id_cliente']}^${pkey}^${req.query['x_ref_payco']}^${req.query['x_transaction_id']}^${req.query['x_amount']}^${req.query['x_currency_code']}`
-        var hash = crypto.createHash('sha256').update(str).digest('hex')
+        console.info(str)
 
         if (hash != signature) {
             return res.status(422)
