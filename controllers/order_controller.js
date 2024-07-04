@@ -88,29 +88,49 @@ export const create = async (req, res) => {
         return res.status(500).json({ success: false, message: error.message });
     }
 };
+const payOrder = async (orderId) => {
+    try {
+        console.info(`Updating order ID: ${orderId} to set isPaid to true`);
+        const order = await prisma.order.update({
+            where: { id: parseInt(orderId, 10) },
+            data: { isPaid: true },
+            include: { orderItems: true }
+        });
+        console.info(`Order ID: ${orderId} updated successfully`);
+        return order;
+    } catch (error) {
+        console.error(`Error updating order ID: ${orderId}`, error);
+        return null;
+    }
+};
 
 export const confirmation = async (req, res) => {
     try {
-        console.log(`confirmation `)
-        console.info(req.body)
-        console.info(req.query)
-        
-        const pkey = "f31030c05f8ab5630ef73a276eaf107129ad7f39"
-        const str = `${req.query['x_cust_id_cliente']}^${pkey}^${req.query['x_ref_payco']}^${req.query['x_transaction_id']}^${req.query['x_amount']}^${req.query['x_currency_code']}`
-        console.info(str)
+        const { x_response, x_id_factura } = req.query;
 
-        if (hash != signature) {
-            return res.status(422)
-            
+        console.info(`Received confirmation request with response: ${x_response}, invoice ID: ${x_id_factura}`);
+
+        if (!x_response || !x_id_factura) {
+            console.warn('Request accepted without query parameters');
+            return res.status(200).json('Request accepted without query parameters');
         }
 
-        
-        const id = req.query['x_extra1']
-        console.log(id)
+        if (x_response.toLowerCase() !== 'aceptada') {
+            console.warn('Request accepted but transaction denied');
+            return res.status(200).json('Request accepted but denied transaction');
+        }
 
-        return res.status(200).json({success: true, message: "Order done" })
+        const order = await payOrder(x_id_factura);
+
+        if (!order) {
+            console.warn('Request accepted and transaction approved, but order not found in DB');
+            return res.status(200).json('Request accepted and transaction approved, but order not found in DB');
+        }
+
+        console.log('Request accepted and transaction approved');
+        return res.status(200).json('Request accepted and transaction approved');
     } catch (error) {
-        console.log(`error: ${error}`)
-        return res.status(500).json({success: false, message: error.message})
+        console.error('Error processing confirmation request:', error);
+        return res.status(500).json({ success: false, message: error.message });
     }
-}
+};
