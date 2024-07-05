@@ -3,10 +3,12 @@ import prisma from "../utils/prismaClient.js";
 export const findAll = async (req, res) => {
 
     try {
+        
         const orders = await prisma.order.findMany({
             include: {
                 user: true,
-                orderItems: true
+                orderItems: true,   
+                shipping: true          
             }
         })
         return res.status(200).json({ success: true, message: "orders", data: orders })
@@ -58,8 +60,9 @@ const validateStock = async (item) => {
 
 export const create = async (req, res) => {
     try {
-        const { userId, orderItems } = req.body;
-
+        const { userId, orderItems, shipping } = req.body;
+        console.log(`shipping: ${shipping} `)
+        
 
         for (let orderItem of orderItems) {
             const isValid = await validateStock(orderItem);
@@ -82,7 +85,27 @@ export const create = async (req, res) => {
                 }
             }
         });
+        if(shipping != undefined){
+            
+            const shipping_create = await prisma.shipping.create({
+                data:{
+                    orderId: order.id,
+                    deliveryDate: new Date() ,
+                    status: false,
+                    department: shipping.department,
+                    town: shipping.town,
+                    address: shipping.address,
+                    cost: shipping.cost
 
+                }
+            })
+
+            
+            await prisma.order.update({
+                where: {id: shipping_create.orderId},
+                data:{shippingId: shipping_create.id}
+            })
+        }
         return res.status(200).json({ success: true, message: "Order created correctly", data: order });
     } catch (error) {
         return res.status(500).json({ success: false, message: error.message });

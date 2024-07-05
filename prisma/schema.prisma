@@ -67,20 +67,28 @@ model Order {
   userId      Int
   user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   orderItems  OrderItem[]
+  shippingId  Int?         @unique
+  shipping    Shipping?    @relation(fields: [shippingId], references: [id])    
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 }
+
 model Shipping {
-  id  Int @id @default(autoincrement())
+  id          Int          @id @default(autoincrement())
+  orderId     Int          @unique
+  order       Order?       @relation
   deliveryDate DateTime
   status      Boolean
   department  String
   town        String
   address     String
+  cost        Decimal
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
-
 }
+
+
+
 model OrderItem {
   id        Int      @id @default(autoincrement())
   quantity  Int
