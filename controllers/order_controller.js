@@ -7,7 +7,11 @@ export const findAll = async (req, res) => {
         const orders = await prisma.order.findMany({
             include: {
                 user: true,
-                orderItems: true,   
+                orderItems: {
+                    include:{
+                        product:true
+                    }
+                },   
                 shipping: true          
             }
         })
