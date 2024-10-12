@@ -10,7 +10,7 @@ const verifyToken = (req, res, next) => {
   
     // Extraemos el token de autorización excluyendo la palabra "Bearer ".
     const token = authHeader.split(" ")[1];
-    console.log(`token: ${token}`);
+    
   
     try {
       jwt.verify(token, process.env.JWT_SECRET_KEY, (err, user) => {
@@ -27,10 +27,11 @@ const verifyToken = (req, res, next) => {
   };
 
 export const verifyUser = (req, res, next) => {
-    console.log(req.params)
+    
     verifyToken(req, res, () => {
         console.log(req.user)
-        if (req.user.id == req.params.userId || req.user.isAdmin) {
+        console.log( ` params ${req.params.userId}`)
+        if (req.user.id == req.body.userId || req.user.isAdmin) {       
             next();
         } else {
             res.status(403).json({ success: false, message: "Forbidden" });
