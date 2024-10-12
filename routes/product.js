@@ -1,6 +1,7 @@
 import express from 'express'
 const router = express();
 import { allFilter, create, delete_product, findAll, findByCategory, findByName, findBySubCategory, find_product, update } from './../controllers/product_controller.js'
+import { verifyAdmin, verifyUser } from '../controllers/utils/verifyToken.js';
 
 
 
@@ -14,7 +15,7 @@ router.get('/', (req, res) => {
         findAll(req, res);
     }
 });
-router.post('/create', create)
+router.post('/create/:userId', verifyAdmin, create)
 router.put('/update/:productId', update)
 router.delete('/:productId', delete_product)
 router.get('/:productId', find_product)

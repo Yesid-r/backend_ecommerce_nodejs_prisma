@@ -1,26 +1,50 @@
-export const verifyToken = (req, res, next) => {
-    const token = req.headers.authorization?.split(" ")[1];
-    
-    if (!token) {
-        return res.status(403).json({ success: false, message: "No token provided" });
-    }
+import jwt from 'jsonwebtoken';
 
-    jwt.verify(token, process.env.JWT_SECRET_KEY, (err, decoded) => {
+const verifyToken = (req, res, next) => {
+    const authHeader = req.headers.authorization;
+  
+    // Verificamos si el encabezado de autorización existe y tiene un formato válido.
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+  
+    // Extraemos el token de autorización excluyendo la palabra "Bearer ".
+    const token = authHeader.split(" ")[1];
+    console.log(`token: ${token}`);
+  
+    try {
+      jwt.verify(token, process.env.JWT_SECRET_KEY, (err, user) => {
         if (err) {
-            return res.status(401).json({ success: false, message: "Failed to authenticate token" });
+          return res.status(401).json({ success: false, message: "token is invalid" });
         }
-        
-        req.userId = decoded.id;
+        req.user = user;
         next();
-    });
-};
+      });
+    } catch (error) {
+      console.log(error);
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+  };
 
 export const verifyUser = (req, res, next) => {
+    console.log(req.params)
     verifyToken(req, res, () => {
-        if (req.user.id === req.params.userId || req.user.isAdmin) {
+        console.log(req.user)
+        if (req.user.id == req.params.userId || req.user.isAdmin) {
             next();
         } else {
             res.status(403).json({ success: false, message: "Forbidden" });
         }
     });
 };
+
+export const verifyAdmin = (req, res, next) => {
+    verifyToken(req, res, () => {
+        if(req.user.id == req.params.userId && req.user.email == 'admin@gmail.com')
+        {
+            next()
+        }else{
+            res.status(403).json({ success: false, message: "Forbidden" });
+        }
+    } )
+}
